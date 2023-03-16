@@ -1,0 +1,24 @@
+#map {
+    height: 500px;
+    width: 900px;
+}
+.mapHolder{
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: start;
+    
+}
+#mapIcons{
+    position:absolute;
+    left: 0;
+    top:80px;
+    z-index: 500;
+
+    background-color: red;
+}
+#mapIcons>h3{
+    margin:0px;
+
+}
