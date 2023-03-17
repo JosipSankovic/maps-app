@@ -5,6 +5,8 @@ import {easyButton} from "source-map-js/lib/source-map-consumer"
 import "./CustomMap.css"
 import axios from "axios";
 import { v4 as uuidv4 } from 'uuid';
+import InputFields from "./InputFields";
+import GPSLocation from "./GpsLocation";
 function CustomMap(){
     const [gpsLocation,setGpsLocation]=useState();
     const [clickedLatLng,setClickedLatLng]=useState();
@@ -14,45 +16,11 @@ function CustomMap(){
     const [polygons,setPolygons]=useState();
     const [points,setPoints]=useState({startPoint:undefined,endPoint:undefined})
     const [selectedPoint,setSelectedPoint]=useState();
-    const [directions,setDirections]=useState()
-
-
-
-
-    function getLocationNameFromCoordinates(coordinates){
-        const options={
-            method:"GET",
-            url:'https://nominatim.openstreetmap.org/reverse',
-            params:{lat:coordinates.lat,lon:coordinates.lng,addressdetails:1,format:"geocodejson"}
-        }
-        axios.request(options).then((response)=>{
-             processLocationName(response.data.features[0].properties.geocoding)
-             
-        })
-    }
-    
-
-
-    function processLocationName(data){
-      
-      setClickedPlace({name:(data.name!=undefined?data.name:""),  housenumber:data.housenumber!=undefined?data.housenumber:"",street:data.street!=undefined?data.street:"",
-        district:data.district,postcode:data.postcode,city:data.city,county:data.county,country:data.country})
-        
-        if(data.name==undefined&&data.housenumber!=undefined){
-            setPlaceName(`${data.housenumber} ${data.street}`)
-        }else if(data.name!=undefined){
-            setPlaceName(`${data.name}`)
-        }else if(data.district!=undefined&& data.city!=undefined){
-            setPlaceName(`${data.district}, ${data.city}`)
-        }else{
-            setPlaceName(county)
-        }
-        
-        
-    }
+    const [directions,setDirections]=useState();
+    const [search,setSearch]=useState("")
 
     
-   async function getRoute({startPoint,endPoint}){
+   async function getRoute(){
         const query = new URLSearchParams({
             key: '7cc88f38-2516-48b2-bce2-77eee7f1c892'
           }).toString();
@@ -66,14 +34,15 @@ function CustomMap(){
               },
               body: JSON.stringify({
                 points: [
-                  [startPoint.lng, startPoint.lat],
-                  [endPoint.lng, endPoint.lat]
+                  [points.startPoint.lng,points.startPoint.lat],
+                  [points.endPoint.lng, points.endPoint.lat]
                 ],
                 
                 snap_preventions: [
                   'motorway',
-                  'ferry',
-                  'tunnel'
+                  'tunnel',
+                  'ferry'
+                  
                 ],
                 details: ['road_class', 'surface'],
                 vehicle: 'car',
@@ -86,28 +55,25 @@ function CustomMap(){
             }
           );
         
-          let data=await resp.json();
+          await resp.json().then((data)=>{
+            data.paths[0].points.coordinates.forEach(x => x.reverse());
+            setPolygons(data.paths[0].points.coordinates)
+            setDirections(data.paths[0].instructions.map((x)=>x.text))
+          }).catch((error)=>{
+            console.log(error)
+          });
           
           
-          data.paths[0].points.coordinates.forEach(x => x.reverse());
-          setPolygons(data.paths[0].points.coordinates)
-          setDirections(data.paths[0].instructions.map((x)=>x.text))
+          
            
 
     }
-    function GetGPSLocation(){
-       
-        function shoWLocationOnMap(e){
-            setGpsLocation({lat:e.coords.latitude,lng:e.coords.longitude})
-            map.target.setView({lat:e.coords.latitude,lng:e.coords.longitude},18)
-            getLocationNameFromCoordinates({lat:e.coords.latitude,lng:e.coords.longitude})
 
-        }
-        return (
-            <div onClick={()=>navigator.geolocation.getCurrentPosition(shoWLocationOnMap)} id="mapIcons">
-                <h3 >Lokacija</h3>
-            </div>
-        )
+    function shoWLocationOnMap(latlng){
+       
+        map.target.setView(latlng,18)
+        getLocationNameFromCoordinates(latlng)
+
     }
 
     
@@ -137,29 +103,14 @@ function CustomMap(){
                     setPoints({...points,endPoint:event.latlng})
 
                 }
-                
+                searchQuery()
                 
             }
         })
         
         return null
     }
-    function InputFields(){
 
-
-        return(
-            <div className="inputFields">
-                <label>StartPoint</label>
-                <button onClick={(e)=>setSelectedPoint(e.target.id)} id="startPoint">Select</button>
-                <br/>
-                <label>EndPoint</label>
-                <button onClick={(e)=>setSelectedPoint(e.target.id)} id="endPoint">Select</button>
-                <br/>
-                <button onClick={()=>getRoute(points)} >Find path</button>
-            </div>
-
-        )
-    }
     function DirectionsComponents(){
 
 
@@ -173,16 +124,60 @@ function CustomMap(){
             </div>
         )
     }
-    
+    function searchQuery(){
+        const options={
+            method:"GET",
+            url:'https://nominatim.openstreetmap.org/search?',
+            params:{q:"zadar",format:"json"}
+        }
+        axios.request(options).then((response)=>{
+            console.log(response)
+             
+        })
+
+        
+    }
+    function processLocationName(data){
+      
+        setClickedPlace({name:(data.name!=undefined?data.name:""),  housenumber:data.housenumber!=undefined?data.housenumber:"",street:data.street!=undefined?data.street:"",
+          district:data.district,postcode:data.postcode,city:data.city,county:data.county,country:data.country})
+          
+          if(data.name==undefined&&data.housenumber!=undefined){
+              setPlaceName(`${data.housenumber} ${data.street}`)
+          }
+          else if(data.name!=undefined){
+              setPlaceName(`${data.name}`)
+          }
+          else if(data.district!=undefined&& data.city!=undefined){
+              setPlaceName(`${data.district}, ${data.city}`)
+          }
+          else if(data.county!=undefined){
+              setPlaceName(data.county)
+          }
+          
+          
+      }
+       function getLocationNameFromCoordinates(coordinates){
+        const options={
+            method:"GET",
+            url:'https://nominatim.openstreetmap.org/reverse',
+            params:{lat:coordinates.lat,lon:coordinates.lng,addressdetails:1,format:"geocodejson"}
+        }
+        axios.request(options).then((response)=>{
+             processLocationName(response.data.features[0].properties.geocoding)
+             
+        })
+    }
     return (
         <div className="mapHolder">
+             
             <MapContainer  id="map"  center={[43.5095122,16.4759378]} zoom={13} schrollWheelZoom={false} whenReady={setMap}>
           <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
             
             
             
-            
+           
             
             <GetWhereIsClickedLatLng />
             
@@ -195,11 +190,13 @@ function CustomMap(){
             
             </MapContainer>
             <div className="restOfTheApp">
-            <GetGPSLocation />
+            <GPSLocation setGpsLocation={setGpsLocation} shoWLocationOnMap={shoWLocationOnMap} />
             <h1>{placeName}</h1>
-            <InputFields />
+            <InputFields getRoute={getRoute} search={search} setSearch={setSearch} setSelectedPoint={setSelectedPoint}  />
             {directions!=undefined&&<DirectionsComponents />}
+            
             </div>
+
         </div>
     )
 }
