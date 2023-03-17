@@ -1,7 +1,7 @@
 
 
 
-function InputFields({setSelectedPoint,getRoute,setSearch,search}){
+function InputFields({setPointsNameAndLatLng,getRoute,setSearch,search,pointsName}){
     
     return(
             
@@ -10,12 +10,12 @@ function InputFields({setSelectedPoint,getRoute,setSearch,search}){
             <input value={search}  onChange={(e)=>setSearch(e.target.value)}/>
             <br/>
             <label>StartPoint</label>
-            <button onClick={(e)=>setSelectedPoint(e.target.id)} id="startPoint">Select</button>
+            <button onClick={(e)=>setPointsNameAndLatLng(e.target.id)} id="startPoint">Select</button>
+            <p>{pointsName.startPointsName}</p>
             <br/>
-            
-            <button onClick={()=>setStat(stat+1)}>press</button>
             <label>EndPoint</label>
-            <button onClick={(e)=>setSelectedPoint(e.target.id)} id="endPoint">Select</button>
+            <button onClick={(e)=>setPointsNameAndLatLng(e.target.id)} id="endPoint">Select</button>
+            <p>{pointsName.endPointsName}</p>
             <br/>
             <button onClick={()=>getRoute()} >Find path</button>
             

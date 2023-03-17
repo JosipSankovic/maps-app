@@ -15,11 +15,15 @@ function CustomMap(){
     const [map, setMap]=useState();
     const [polygons,setPolygons]=useState();
     const [points,setPoints]=useState({startPoint:undefined,endPoint:undefined})
+    const [pointsName,setPointsName]=useState({startPointName:undefined,endPointName:undefined})
     const [selectedPoint,setSelectedPoint]=useState();
+    
     const [directions,setDirections]=useState();
     const [search,setSearch]=useState("")
 
-    
+    function setPointsNameAndLatLng(setPointLatLng){
+        setSelectedPoint(setPointLatLng)
+    }
    async function getRoute(){
         const query = new URLSearchParams({
             key: '7cc88f38-2516-48b2-bce2-77eee7f1c892'
@@ -69,10 +73,13 @@ function CustomMap(){
 
     }
 
-    function shoWLocationOnMap(latlng){
+    function showGpsLocationOnMap(latlng){
        
         map.target.setView(latlng,18)
-        getLocationNameFromCoordinates(latlng)
+        getLocationNameFromCoordinates(latlng).then((response)=>{
+            setPlaceName(response)
+        })
+        
 
     }
 
@@ -95,7 +102,18 @@ function CustomMap(){
         const map=useMapEvents({
             click:(event)=>{
                 setClickedLatLng(event.latlng)
-                getLocationNameFromCoordinates(event.latlng)             
+               
+                getLocationNameFromCoordinates(event.latlng).then((response)=>{
+                    setPlaceName(response)
+
+                    if(selectedPoint=="startPoint"){
+                        setPointsName({...pointsName,startPointsName:response})
+                    }else if(selectedPoint=="endPoint"){
+                        setPointsName({...pointsName,endPointsName:response})
+    
+                    }
+                    console.log(pointsName)
+                })             
                 
                 if(selectedPoint=="startPoint"){
                     setPoints({...points,startPoint:event.latlng})
@@ -131,7 +149,7 @@ function CustomMap(){
             params:{q:"zadar",format:"json"}
         }
         axios.request(options).then((response)=>{
-            console.log(response)
+            
              
         })
 
@@ -141,32 +159,33 @@ function CustomMap(){
       
         setClickedPlace({name:(data.name!=undefined?data.name:""),  housenumber:data.housenumber!=undefined?data.housenumber:"",street:data.street!=undefined?data.street:"",
           district:data.district,postcode:data.postcode,city:data.city,county:data.county,country:data.country})
-          
+         
           if(data.name==undefined&&data.housenumber!=undefined){
-              setPlaceName(`${data.housenumber} ${data.street}`)
+              return(`${data.housenumber} ${data.street}`)
           }
           else if(data.name!=undefined){
-              setPlaceName(`${data.name}`)
+              return(`${data.name}`)
           }
           else if(data.district!=undefined&& data.city!=undefined){
-              setPlaceName(`${data.district}, ${data.city}`)
+              return(`${data.district}, ${data.city}`)
           }
           else if(data.county!=undefined){
-              setPlaceName(data.county)
+              return(data.county)
           }
           
-          
+         
       }
-       function getLocationNameFromCoordinates(coordinates){
+    async function getLocationNameFromCoordinates(coordinates){
+        
         const options={
             method:"GET",
             url:'https://nominatim.openstreetmap.org/reverse',
             params:{lat:coordinates.lat,lon:coordinates.lng,addressdetails:1,format:"geocodejson"}
         }
-        axios.request(options).then((response)=>{
-             processLocationName(response.data.features[0].properties.geocoding)
-             
-        })
+
+       return await axios.request(options).then((response)=>processLocationName(response.data.features[0].properties.geocoding)).catch(()=>{return null})
+        
+        
     }
     return (
         <div className="mapHolder">
@@ -190,9 +209,9 @@ function CustomMap(){
             
             </MapContainer>
             <div className="restOfTheApp">
-            <GPSLocation setGpsLocation={setGpsLocation} shoWLocationOnMap={shoWLocationOnMap} />
+            <GPSLocation setGpsLocation={setGpsLocation} shoWLocationOnMap={showGpsLocationOnMap} />
             <h1>{placeName}</h1>
-            <InputFields getRoute={getRoute} search={search} setSearch={setSearch} setSelectedPoint={setSelectedPoint}  />
+            <InputFields getRoute={getRoute} search={search} setSearch={setSearch} setPointsNameAndLatLng={setPointsNameAndLatLng} pointsName={pointsName}  />
             {directions!=undefined&&<DirectionsComponents />}
             
             </div>
