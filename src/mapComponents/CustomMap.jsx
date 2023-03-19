@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {Pane,MapContainer, TileLayer, useMap, useMapEvents, Marker, LayerGroup, LayersControl, Popup, Polyline} from "react-leaflet"
 import L, { Layer, point } from "leaflet"
 import {easyButton} from "source-map-js/lib/source-map-consumer"
@@ -17,11 +17,15 @@ function CustomMap(){
     const [points,setPoints]=useState({startPoint:undefined,endPoint:undefined})
     const [pointsName,setPointsName]=useState({startPointName:undefined,endPointName:undefined})
     const [selectedPoint,setSelectedPoint]=useState();
-    
+    const restOfTheAppDiv=useRef()
+    const[uvuceno,setUvuceno]=useState()
     const [directions,setDirections]=useState();
+    const [cursor,setCursor]=useState("grab")
 
-
-    
+    useEffect(()=>{
+       document.getElementById("map").style.cursor=cursor
+       console.log(cursor)
+    },[cursor])
     function setPointsNameAndLatLng(setPointLatLng){
         setSelectedPoint(setPointLatLng)
     }
@@ -99,7 +103,7 @@ function CustomMap(){
         const map=useMapEvents({
             click:(event)=>{
                 setClickedLatLng(event.latlng)
-               
+               setCursor("grab")
                 getLocationNameFromCoordinates(event.latlng).then((response)=>{
                     setPlaceName(response)
 
@@ -173,6 +177,44 @@ function CustomMap(){
         
         
     }
+    function uvuciDiv(ref){
+
+        let id
+        let interval
+       if(uvuceno){
+        id=10
+         interval=setInterval(izvuci,30)
+        
+       }else{
+        id=30
+         interval=setInterval(uvuci,30)
+       }
+        function uvuci(){
+            console.log(id)
+            if(id==9){
+                clearInterval(interval);
+                setUvuceno(!uvuceno)
+            }
+            else{
+                ref.current.style.width=id+"%";
+                id=id-1
+               
+            }
+            
+        }
+        function izvuci(){
+            if(id==31){
+                clearInterval(interval);
+                setUvuceno(!uvuceno)
+            }
+            else{
+                ref.current.style.width=id+"%";
+                id=id+1
+                
+            }
+        }
+        
+    }
     return (
         <div className="mapHolder">
              
@@ -194,10 +236,11 @@ function CustomMap(){
             
             
             </MapContainer>
-            <div className="restOfTheApp">
+            <div className="restOfTheApp" ref={restOfTheAppDiv}>
+            <p onClick={()=>uvuciDiv(restOfTheAppDiv)}>Smanji</p>
             <GPSLocation setGpsLocation={setGpsLocation} shoWLocationOnMap={showGpsLocationOnMap} />
             <h1>{placeName}</h1>
-            <InputFields showLocation={showGpsLocationOnMap} getRoute={getRoute} setPointsNameAndLatLng={setPointsNameAndLatLng} pointsName={pointsName}  />
+            <InputFields setCursor={setCursor} showLocation={showGpsLocationOnMap} getRoute={getRoute} setPointsNameAndLatLng={setPointsNameAndLatLng} pointsName={pointsName}  />
             
             {directions!=undefined&&<DirectionsComponents />}
             

@@ -3,9 +3,10 @@ import axios from "axios"
 import { v4 as uuidv4 } from 'uuid';
 import "./InputFields.css"
 
-function InputFields({setPointsNameAndLatLng,getRoute,pointsName,showLocation}){
+function InputFields({setPointsNameAndLatLng,getRoute,pointsName,showLocation,setCursor}){
     const [search,setSearch]=useState("")
     const [searchResults,setSearchResults]=useState([])
+    
    
     function setLonLng(lat,lng){
         return{lat:lat,lng:lng}
@@ -23,7 +24,7 @@ function InputFields({setPointsNameAndLatLng,getRoute,pointsName,showLocation}){
         
          return Name
       }
-    function searchQuery(){
+    async function searchQuery(){
       
         const options={
             method:"GET",
@@ -32,10 +33,9 @@ function InputFields({setPointsNameAndLatLng,getRoute,pointsName,showLocation}){
             headers:{Authorization:search}
         }
         
-       axios.request(options).then((response)=>{
-            
-
+       return await axios.request(options).then((response)=>{
              setSearchResults(response.data)
+             return response
             
         }).catch((e)=>console.log(e))
 
@@ -71,20 +71,27 @@ function InputFields({setPointsNameAndLatLng,getRoute,pointsName,showLocation}){
             </div>
         )
     }
+    function searchFirst(e){
+        if(e.key=="Enter"){
+        searchQuery().then((response)=>{
+            showLocation(setLonLng(response.data[0].lat,response.data[0].lon))
+        })
+    }
+    }
     return(
             
         <div className="inputFields">
             <label>Search</label>
-            <input value={search}  onChange={(e)=>{setSearch(e.target.value)}}/>
+            <input  value={search} onChange={(e)=>{setSearch(e.target.value)}} onKeyDown={(e)=>{searchFirst(e)}} />
             
             {(searchResults!=undefined&&search!="" )&&<DisplaySearchResults/>}
             <br/>
             <label>StartPoint</label>
-            <button onClick={(e)=>setPointsNameAndLatLng(e.target.id)} id="startPoint">Select</button>
+            <button onClick={(e)=>{setPointsNameAndLatLng(e.target.id);setCursor("default")}} id="startPoint">Select</button>
             <p>{pointsName.startPointsName}</p>
             <br/>
             <label>EndPoint</label>
-            <button onClick={(e)=>setPointsNameAndLatLng(e.target.id)} id="endPoint">Select</button>
+            <button onClick={(e)=>{setPointsNameAndLatLng(e.target.id);setCursor("default")}} id="endPoint">Select</button>
             <p>{pointsName.endPointsName}</p>
             <br/>
             <button onClick={()=>getRoute()} >Find path</button>

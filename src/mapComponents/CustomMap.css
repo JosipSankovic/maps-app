@@ -1,26 +1,28 @@
 #map {
     height: 100%;
     width: 100%;
+    
 }
 .mapHolder{
     position: relative;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: start;
+   
     width: 100%;
     height: 100%;
     
 }
 .restOfTheApp{
-    width: 40%;
-    overflow-y: scroll;
+        width: 30%;
+        height: 100%;
+        overflow-y: scroll;
+        position: absolute;
+        z-index: 500;
+        top: 0;
+        right: 0;
+        background-color: gainsboro;
 }
 #mapIcons{
-    position:absolute;
-    left: 0;
-    top:80px;
-    z-index: 500;
+    
+    
 
     background-color: red;
 }
