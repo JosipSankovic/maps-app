@@ -19,8 +19,9 @@ function CustomMap(){
     const [selectedPoint,setSelectedPoint]=useState();
     
     const [directions,setDirections]=useState();
-    const [search,setSearch]=useState("")
 
+
+    
     function setPointsNameAndLatLng(setPointLatLng){
         setSelectedPoint(setPointLatLng)
     }
@@ -65,20 +66,16 @@ function CustomMap(){
             setDirections(data.paths[0].instructions.map((x)=>x.text))
           }).catch((error)=>{
             console.log(error)
-          });
-          
-          
-          
-           
+          })
 
     }
 
-    function showGpsLocationOnMap(latlng){
+    function showGpsLocationOnMap(latlng,zoom=18){
        
-        map.target.setView(latlng,18)
+        map.target.setView(latlng,zoom)
         getLocationNameFromCoordinates(latlng).then((response)=>{
             setPlaceName(response)
-        })
+        }).catch((e)=>console.log(e))
         
 
     }
@@ -112,8 +109,9 @@ function CustomMap(){
                         setPointsName({...pointsName,endPointsName:response})
     
                     }
-                    console.log(pointsName)
-                })             
+                    
+
+                }).catch((e)=>console.log(e))     
                 
                 if(selectedPoint=="startPoint"){
                     setPoints({...points,startPoint:event.latlng})
@@ -121,7 +119,7 @@ function CustomMap(){
                     setPoints({...points,endPoint:event.latlng})
 
                 }
-                searchQuery()
+                
                 
             }
         })
@@ -142,19 +140,7 @@ function CustomMap(){
             </div>
         )
     }
-    function searchQuery(){
-        const options={
-            method:"GET",
-            url:'https://nominatim.openstreetmap.org/search?',
-            params:{q:"zadar",format:"json"}
-        }
-        axios.request(options).then((response)=>{
-            
-             
-        })
-
-        
-    }
+   
     function processLocationName(data){
       
         setClickedPlace({name:(data.name!=undefined?data.name:""),  housenumber:data.housenumber!=undefined?data.housenumber:"",street:data.street!=undefined?data.street:"",
@@ -183,7 +169,7 @@ function CustomMap(){
             params:{lat:coordinates.lat,lon:coordinates.lng,addressdetails:1,format:"geocodejson"}
         }
 
-       return await axios.request(options).then((response)=>processLocationName(response.data.features[0].properties.geocoding)).catch(()=>{return null})
+       return await axios.request(options).then((response)=>processLocationName(response.data.features[0].properties.geocoding)).catch((e)=>console.log(e))
         
         
     }
@@ -191,8 +177,8 @@ function CustomMap(){
         <div className="mapHolder">
              
             <MapContainer  id="map"  center={[43.5095122,16.4759378]} zoom={13} schrollWheelZoom={false} whenReady={setMap}>
-          <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
+          <TileLayer attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+            url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png"/>
             
             
             
@@ -211,7 +197,8 @@ function CustomMap(){
             <div className="restOfTheApp">
             <GPSLocation setGpsLocation={setGpsLocation} shoWLocationOnMap={showGpsLocationOnMap} />
             <h1>{placeName}</h1>
-            <InputFields getRoute={getRoute} search={search} setSearch={setSearch} setPointsNameAndLatLng={setPointsNameAndLatLng} pointsName={pointsName}  />
+            <InputFields showLocation={showGpsLocationOnMap} getRoute={getRoute} setPointsNameAndLatLng={setPointsNameAndLatLng} pointsName={pointsName}  />
+            
             {directions!=undefined&&<DirectionsComponents />}
             
             </div>
