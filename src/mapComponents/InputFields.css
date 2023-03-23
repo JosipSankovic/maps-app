@@ -1,13 +1,66 @@
 
 .divResults{
     
-    max-height:400px;
-    overflow: scroll;
+    max-height: 400px;
+    overflow: visible;
     overflow-x: hidden;
+    border-style: solid;
+    border-width: 1px;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    border-top-width: 0px;
+}
+
+.direction-part{
+    background-color: white;
+}
+
+.directionsInput{
+    display: none;
+}
+.directionsInput>p{
+    margin: 2px;
+}
+.searchDiv{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    border-style: solid;
+    border-width: 1px;
+    border-bottom-width: 0px;
+    border-top-width: 0px;
 }
 
 .directions{
     max-height:400px;
     overflow: scroll;
     overflow-x: hidden;
+}
+
+.search{
+    border-radius: 7px;
+    width: 70%;
+    height: 25px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size: medium;
+    font-family: ui-sans-serif;
+    border-style: none;
+}
+.searchElement{
+    padding: 10px;
+    
+}
+.searchElement:hover{
+    background-color:white;
+    cursor: default;
+}
+.searchElement>p{
+    margin:0px;
+    text-align: start;
+    font-size: medium;
+    font-family: ui-sans-serif;
+    color:light dark;
 }

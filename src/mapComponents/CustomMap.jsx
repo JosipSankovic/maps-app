@@ -7,6 +7,8 @@ import axios from "axios";
 import { v4 as uuidv4 } from 'uuid';
 import InputFields from "./InputFields";
 import GPSLocation from "./GpsLocation";
+import { typeOfIcon}  from "./IconComponent";
+import IconComponent from "./IconComponent";
 function CustomMap(){
     const [gpsLocation,setGpsLocation]=useState();
     const [clickedLatLng,setClickedLatLng]=useState();
@@ -17,10 +19,11 @@ function CustomMap(){
     const [points,setPoints]=useState({startPoint:undefined,endPoint:undefined})
     const [pointsName,setPointsName]=useState({startPointName:undefined,endPointName:undefined})
     const [selectedPoint,setSelectedPoint]=useState();
-    const restOfTheAppDiv=useRef()
-    const[uvuceno,setUvuceno]=useState()
+    const [selectingStartAndEndPoints,setSelectingStartAndEndPoints]=useState(false)
+    const[collapsed,setCollapsed]=useState(true)
+    const collapseAndExpandDiv=useRef()
     const [directions,setDirections]=useState();
-    const [cursor,setCursor]=useState("grab")
+    const [cursor,setCursor]=useState("grab")    
 
     useEffect(()=>{
        document.getElementById("map").style.cursor=cursor
@@ -28,6 +31,7 @@ function CustomMap(){
     },[cursor])
     function setPointsNameAndLatLng(setPointLatLng){
         setSelectedPoint(setPointLatLng)
+        setSelectingStartAndEndPoints(true)
     }
    async function getRoute(){
         const query = new URLSearchParams({
@@ -77,6 +81,7 @@ function CustomMap(){
     function showGpsLocationOnMap(latlng,zoom=18){
        
         map.target.setView(latlng,zoom)
+        setClickedLatLng(latlng)
         getLocationNameFromCoordinates(latlng).then((response)=>{
             setPlaceName(response)
         }).catch((e)=>console.log(e))
@@ -85,44 +90,39 @@ function CustomMap(){
     }
 
     
-    function SetMarkerOnPosition({position,paneName,title}){
-        
-        if(position!=undefined){
-        return(
-        <Pane  name={paneName} style={{ zIndex: 400 }}>
-            <Marker  position={position}><Popup><p>{title}</p></Popup></Marker>    
-        </Pane>
-        )
-        }else{
-            return null
-        }
-    }
 
     function GetWhereIsClickedLatLng(){
-        
+      
         const map=useMapEvents({
             click:(event)=>{
+                if(selectingStartAndEndPoints==false){
                 setClickedLatLng(event.latlng)
-               setCursor("grab")
                 getLocationNameFromCoordinates(event.latlng).then((response)=>{
                     setPlaceName(response)
-
+                }).catch((e)=>console.log(e))  
+                }else if(selectingStartAndEndPoints==true){
                     if(selectedPoint=="startPoint"){
-                        setPointsName({...pointsName,startPointsName:response})
+                        setPoints({...points,startPoint:event.latlng})
                     }else if(selectedPoint=="endPoint"){
-                        setPointsName({...pointsName,endPointsName:response})
-    
+                        setPoints({...points,endPoint:event.latlng})
                     }
-                    
-
-                }).catch((e)=>console.log(e))     
-                
-                if(selectedPoint=="startPoint"){
-                    setPoints({...points,startPoint:event.latlng})
-                }else if(selectedPoint=="endPoint"){
-                    setPoints({...points,endPoint:event.latlng})
-
+                    setCursor("grab")
+                    setSelectingStartAndEndPoints(false)
+                    setPolygons([])
+                    getLocationNameFromCoordinates(event.latlng).then((response)=>{
+                        setPlaceName(response)
+                        if(selectedPoint=="startPoint"){
+                            setPointsName({...pointsName,startPointsName:response})
+                        }else if(selectedPoint=="endPoint"){
+                            setPointsName({...pointsName,endPointsName:response})
+    
+                        }
+                    }).catch((e)=>console.log(e))     
                 }
+               
+                
+                
+                
                 
                 
             }
@@ -177,44 +177,8 @@ function CustomMap(){
         
         
     }
-    function uvuciDiv(ref){
 
-        let id
-        let interval
-       if(uvuceno){
-        id=10
-         interval=setInterval(izvuci,30)
-        
-       }else{
-        id=30
-         interval=setInterval(uvuci,30)
-       }
-        function uvuci(){
-            console.log(id)
-            if(id==9){
-                clearInterval(interval);
-                setUvuceno(!uvuceno)
-            }
-            else{
-                ref.current.style.width=id+"%";
-                id=id-1
-               
-            }
-            
-        }
-        function izvuci(){
-            if(id==31){
-                clearInterval(interval);
-                setUvuceno(!uvuceno)
-            }
-            else{
-                ref.current.style.width=id+"%";
-                id=id+1
-                
-            }
-        }
-        
-    }
+
     return (
         <div className="mapHolder">
              
@@ -229,21 +193,25 @@ function CustomMap(){
             <GetWhereIsClickedLatLng />
             
             
-            <SetMarkerOnPosition paneName="gpsLocation" position={gpsLocation} title="your location" />
-            {points.startPoint!=undefined&&<SetMarkerOnPosition paneName="startPoint" position={points.startPoint}  title="selected start location"/>}
-           {points.endPoint!=undefined&&<SetMarkerOnPosition paneName="endPoint" position={points.endPoint}  title="selected end location"/>}
+            {gpsLocation!=undefined&&<IconComponent type={typeOfIcon.redIcon} paneName="gpsLocation" position={gpsLocation} title="your location"/>}
+            {points.startPoint!=undefined&&<IconComponent type={typeOfIcon.greenIcon} paneName="startPoint" position={points.startPoint}  title="selected start location"/>}
+            {points.endPoint!=undefined&&<IconComponent type={typeOfIcon.blueIcon} paneName="endPoint" position={points.endPoint}  title="selected end location"/>}
+            {clickedLatLng!=undefined&&<IconComponent type={typeOfIcon.yellowIcon} paneName="selectedLocation" position={clickedLatLng}  title="selected location"/>}
+                
             {polygons!=undefined&&<Polyline pathOptions={{color:'red'}} positions={polygons} />}
             
             
             </MapContainer>
-            <div className="restOfTheApp" ref={restOfTheAppDiv}>
-            <p onClick={()=>uvuciDiv(restOfTheAppDiv)}>Smanji</p>
+            
+            <div className="restOfTheApp">
+            <img onClick={()=>setCollapsed(prevCollapse=>!prevCollapse)} src="https://toppng.com/uploads/preview/menu-icon-png-3-lines-11552739283bazga05wbc.png" style={{width:"30px",height:"30px",textAlign:"start"}}/>
+            <div  className="collapseAndExpand">
             <GPSLocation setGpsLocation={setGpsLocation} shoWLocationOnMap={showGpsLocationOnMap} />
-            <h1>{placeName}</h1>
-            <InputFields setCursor={setCursor} showLocation={showGpsLocationOnMap} getRoute={getRoute} setPointsNameAndLatLng={setPointsNameAndLatLng} pointsName={pointsName}  />
+            <h3>{placeName}</h3>
+            <InputFields collapseDiv={collapsed} setCursor={setCursor} showLocation={showGpsLocationOnMap} getRoute={getRoute} setPointsNameAndLatLng={setPointsNameAndLatLng} pointsName={pointsName}  />
             
             {directions!=undefined&&<DirectionsComponents />}
-            
+            </div>
             </div>
 
         </div>

@@ -12,21 +12,33 @@
 }
 .restOfTheApp{
         width: 30%;
-        height: 100%;
-        overflow-y: scroll;
+        height: fit-content;
+        overflow-y: hidden;
         position: absolute;
         z-index: 500;
         top: 0;
         right: 0;
-        background-color: gainsboro;
+        background-color:whitesmoke;
+        text-align: left;
 }
-#mapIcons{
-    
-    
-
-    background-color: blue;
+#gpsIcons:hover{
+cursor: pointer;
 }
-#mapIcons>h3{
+#gpsIcons{
+    border: black;
+    border-style: dashed;
+    border-width: 1px;
+    padding:1px;
+}
+#gpsIcons:active{
+    border-width: 2px;
+    padding:0px;
+}
+#gpsIcons>p{
     margin:0px;
 
+}
+.collapseAndExpand{
+    z-index: 500;
+    margin:10px;
 }

@@ -8,8 +8,8 @@ function GPSLocation({shoWLocationOnMap,setGpsLocation}){
     }
     
     return (
-        <div onClick={()=>navigator.geolocation.getCurrentPosition(setGpsLocations)} id="mapIcons">
-            <h3 >Lokacija</h3>
+        <div onClick={()=>navigator.geolocation.getCurrentPosition(setGpsLocations)} id="gpsIcons">
+            <p><img src="https://img.lovepik.com/free-png/20210926/lovepik-map-location-icon-free-vector-illustration-png-image_401494181_wh1200.png" style={{width:"30px",height:"30px"}}/> Find your location</p>
         </div>
     )
 }
